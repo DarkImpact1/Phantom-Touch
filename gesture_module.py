@@ -1,6 +1,7 @@
 import numpy as np
-import math
+import math, time
 import pyautogui
+import cv2
 
 
 def fingers_up(hand_landmarks):
@@ -39,15 +40,46 @@ def move_cursor(hand_landmarks, screen_width, screen_height, alpha, prev_x, prev
     prev_x, prev_y = smooth_x, smooth_y
     return prev_x, prev_y, smooth_x, smooth_y
 
-def left_click(hand_landmarks):
-    """Triggers a left click when the index and thumb tips are close."""
+
+click_active = False  # Flag to prevent multiple clicks
+last_click_time = 0   # Timestamp to avoid accidental rapid clicks
+cooldown_time = 0.3   # Cooldown time (in seconds) between clicks
+
+def detect_left_click_pinch(frame,hand_landmarks, threshold=0.05):
+    """Detects a pinch gesture and performs a left-click when detected."""
+    global click_active, last_click_time
+
     thumb_tip = hand_landmarks.landmark[4]
     index_tip = hand_landmarks.landmark[8]
 
-    # Calculate Euclidean distance
+    # Calculate Euclidean distance between thumb tip and index finger tip
     distance = math.sqrt((thumb_tip.x - index_tip.x) ** 2 + (thumb_tip.y - index_tip.y) ** 2)
-    return distance
+    cv2.putText(frame, str(distance), (60, 60), cv2.FONT_HERSHEY_SIMPLEX,0.1 ,(0, 255, 0), 2)
+    current_time = time.time()
 
+    if distance < threshold and not click_active:
+        if current_time - last_click_time > cooldown_time:  # Check cooldown
+            print("Left Click Detected", distance)
+            pyautogui.click()
+            last_click_time = current_time  # Update last click time
+        click_active = True  # Prevent continuous clicking
+
+    elif distance > threshold:
+        click_active = False  # Reset when fingers move apart
+
+def detect_right_click_pinch(frame,hand_landmarks, threshold=0.05):
+    """
+    Detects pinch between thumb and middle finger and performs a right-click.
+    """
+    thumb_tip = hand_landmarks.landmark[4]  # Thumb tip
+    middle_tip = hand_landmarks.landmark[12]  # Middle finger tip
+
+    # Calculate Euclidean distance
+    distance = ((thumb_tip.x - middle_tip.x) ** 2 + (thumb_tip.y - middle_tip.y) ** 2) ** 0.5
+    cv2.putText(frame, str(distance), (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+    if distance < threshold:
+        print("Right Click Detected", distance)
+        pyautogui.rightClick()
 
 class Smoother:
     """Applies moving average smoothing to cursor movement"""
