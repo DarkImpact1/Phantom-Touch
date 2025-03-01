@@ -1,0 +1,44 @@
+**PhantomTouch: AI-Powered Touchless Mouse Control**
+
+### **Project Roadmap**
+
+#### **Phase 1: Research & Setup**
+1. **Define Scope & Requirements**  
+   - Identify gestures (e.g., move cursor, click, scroll, drag, right-click).  
+   - Choose the best libraries/tools (e.g., MediaPipe, OpenCV, PyAutoGUI).  
+
+2. **Setup Development Environment**  
+   - Install dependencies: OpenCV, MediaPipe, PyAutoGUI, etc.  
+   - Configure webcam input.  
+
+#### **Phase 2: Hand Tracking & Gesture Recognition**
+3. **Implement Hand Tracking**  
+   - Use **MediaPipe Hands** (or other methods) to detect fingers.  
+   - Extract key landmarks for gesture detection.  
+
+4. **Map Gestures to Actions**  
+   - Define logic for controlling the mouse based on finger movements.  
+   - Implement a **smooth cursor movement algorithm** (avoid jitter).  
+
+#### **Phase 3: Mouse Control Integration**
+5. **Control Mouse Using Gestures**  
+   - Move the cursor using fingertip positions.  
+   - Implement click, drag, and scroll gestures with specific movements.  
+
+6. **Optimize for Accuracy & Latency**  
+   - Reduce lag in mouse movements.  
+   - Implement filters (e.g., Kalman filter) for stable tracking.  
+
+#### **Phase 4: Enhancements & Testing**
+7. **Add Customization Options**  
+   - Adjustable sensitivity settings.  
+   - Different gesture modes for better usability.  
+
+8. **Testing & Debugging**  
+   - Test across different lighting conditions and backgrounds.  
+   - Ensure robustness for various hand sizes and angles.  
+
+9. **Deploy & Package**  
+   - Convert into an executable file or lightweight application.  
+   - Explore integration with external devices (optional).
+
