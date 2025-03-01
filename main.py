@@ -1,7 +1,7 @@
 import cv2
 import mediapipe as mp
 import pyautogui
-from gesture_module import fingers_up, Smoother, move_cursor, detect_left_click_pinch, detect_right_click_pinch
+from gesture_module import fingers_up, Smoother, move_cursor, detect_left_click_pinch, detect_right_click_pinch, scroll_screen
 
 # Flags to control actions
 activate_mouse = False
@@ -69,6 +69,10 @@ def main():
                         activate_click_action = False
                         scroll_active = False
                         text = "All Control Deactivated"
+                    elif finger_states == [0, 1, 1, 1, 0]:  # shutdown the program
+                        cap.release()
+                        cv2.destroyAllWindows()
+                        break
                     else:
                         text = ""
 
@@ -86,6 +90,9 @@ def main():
                     elif activate_click_action:
                         detect_left_click_pinch(frame, hand_landmarks)
                         detect_right_click_pinch(frame, hand_landmarks)
+                    
+                    elif scroll_active:
+                        prev_y = scroll_screen(hand_landmarks, prev_y, screen_height, sensitivity=2)
 
         # Display output
         cv2.imshow("PhantomTouch - Right Hand Cursor Control", frame)
