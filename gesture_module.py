@@ -1,7 +1,7 @@
 import numpy as np
 import math, time
 import pyautogui
-
+import cv2
 class Smoother:
     """Applies moving average smoothing to cursor movement"""
     def __init__(self, window_size=5):
@@ -47,17 +47,25 @@ def fingers_up(hand_landmarks):
 
 
 def move_cursor(hand_landmarks, screen_width, screen_height, alpha, prev_x, prev_y):
-    """Move cursor based on index finger position"""
+    """Move cursor smoothly using exponential smoothing while maintaining previous positions."""
     index_finger = hand_landmarks.landmark[8]  # Index fingertip
 
+    # Convert normalized coordinates to screen coordinates
     x = int(index_finger.x * screen_width)
     y = int(index_finger.y * screen_height)
 
     # Apply exponential smoothing
     smooth_x = alpha * x + (1 - alpha) * prev_x
     smooth_y = alpha * y + (1 - alpha) * prev_y
+
+    # Ensure cursor stays within screen bounds
+    smooth_x = max(0, min(screen_width, smooth_x))
+    smooth_y = max(0, min(screen_height, smooth_y))
+
+    # Update previous positions (important for correct tracking)
     prev_x, prev_y = smooth_x, smooth_y
-    return prev_x, prev_y, smooth_x, smooth_y
+
+    return prev_x, prev_y, int(smooth_x), int(smooth_y)
 
 
 click_active = False  # Flag to prevent multiple clicks
@@ -74,22 +82,17 @@ def detect_left_click_pinch(frame, hand_landmarks, threshold=0.05):
 
     # Calculate Euclidean distance between thumb tip and index finger tip
     distance = math.sqrt((thumb_tip.x - index_tip.x) ** 2 + (thumb_tip.y - index_tip.y) ** 2)
-    # cv2.putText(frame, f"Left Click: {distance:.3f}", (60, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
     current_time = time.time()
 
-    if distance < threshold:
-        if not click_active:
-            if current_time - last_click_time > cooldown_time:  # Check cooldown
-                # print("Left Click Detected", distance)
-                pyautogui.mouseDown()  # Start dragging
-                drag_active = True
-                last_click_time = current_time
-            click_active = True  # Prevent continuous clicking
-    else:
-        if drag_active:
-            pyautogui.mouseUp()  # Stop dragging
-            drag_active = False
+    if distance <= threshold and not click_active:
+        if current_time - last_click_time > cooldown_time:  # Check cooldown
+            # print("Left Click Detected", distance)
+            cv2.putText(frame, f": Left Click ", (250, 130), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+            pyautogui.leftClick()  # Start dragging
+            last_click_time = current_time
+        click_active = True  # Prevent continuous clicking
+    elif distance > threshold:
         click_active = False  # Reset when fingers move apart
 
 
@@ -102,13 +105,14 @@ def detect_right_click_pinch(frame, hand_landmarks, threshold=0.05):
 
     # Calculate Euclidean distance
     distance = ((thumb_tip.x - middle_tip.x) ** 2 + (thumb_tip.y - middle_tip.y) ** 2) ** 0.5
-    # cv2.putText(frame, f"Right Click: {distance:.3f}", (60, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 2)
+    
 
     current_time = time.time()
 
     if distance < threshold and not click_active:
         if current_time - last_click_time > cooldown_time:  # Check cooldown
             # print("Right Click Detected", distance)
+            cv2.putText(frame, f": Right Click ", (250, 130), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
             pyautogui.rightClick()
             last_click_time = current_time  # Update last click time
         click_active = True  # Prevent continuous clicking
