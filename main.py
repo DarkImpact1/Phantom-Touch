@@ -45,15 +45,8 @@ def main():
         # Flip image for natural movement & convert to RGB
         frame = cv2.flip(frame, 1)
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-        # Process frame
-        try:
-            result = hands.process(rgb_frame)
-            if result.multi_hand_landmarks is None:
-                raise RuntimeError("Error: No hands detected. Ensure your hand is visible to the camera.")
-        except Exception as e:
-            print(e)
-            continue
+        
+        result = hands.process(rgb_frame)
 
         if result.multi_hand_landmarks:
             for hand_landmarks, handedness in zip(result.multi_hand_landmarks, result.multi_handedness):
